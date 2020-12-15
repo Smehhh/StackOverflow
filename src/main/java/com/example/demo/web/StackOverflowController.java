@@ -12,13 +12,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/stackoverflow")
 public class StackOverflowController {
-
     @Autowired
     private StackOverflowService stackOverflowService;
-
     @RequestMapping
     public List<StackOverflowWebSite> getListOfProviders(){
-
             return stackOverflowService.findAll();
     }
 }

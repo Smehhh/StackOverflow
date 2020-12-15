@@ -1,33 +1,45 @@
 package com.example.demo.service;
 
+import com.example.demo.model.SiteDTO;
 import com.example.demo.model.StackOverflowWebSite;
 import com.example.demo.persistence.StackOverflowWebsiteRepository;
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class StackOverflowService {
-    private static List<StackOverflowWebSite> items = new ArrayList<>();
     @Autowired
     private StackOverflowWebsiteRepository stackOverflowWebsiteRepository;
-    static {
-        items.add(new StackOverflowWebSite("stackoverflow", "https://stackoverflow.com/",
-               "http://cdn.sstatic.net/Sites/stackoverflow/img/favicon.ico", "StackExchange",
-                "for professional and enthusiast programmers"));
-        items.add(new StackOverflowWebSite("serverfault", "https://serverfault.com/",
-                "http://cdn.sstatic.net/Sites/serverfault/img/favicon.ico", "StackExchange",
-                "for system and network administrators"));
+    @Autowired
+    private StackExchangeClient client;
+
+    public List<StackOverflowWebSite> findAll(){
+        return client.getSites().stream().map(this::DTOtoWebsite)
+                .filter(this::ignoreMeta).collect(collectingAndThen(toList(), ImmutableList::copyOf));
     }
-    public List<StackOverflowWebSite> findAll() {
+
+    private boolean ignoreMeta(StackOverflowWebSite stackOverflowWebSite) {
+        return !stackOverflowWebSite.getWebsite().contains("meta");
+    }
+
+    public StackOverflowWebSite DTOtoWebsite(@NotNull SiteDTO dto){
+        return new StackOverflowWebSite(dto.getName(), dto.getSite_url().substring(8, dto.getSite_url().length() - 4),
+                dto.getFavicon_url(), dto.getName(), dto.getAudience());
+    }
+
+   /* public List<StackOverflowWebSite> findAll() {
         return stackOverflowWebsiteRepository.findAll();
     }
 
-    @PostConstruct
+   @PostConstruct
     public void init(){
-        stackOverflowWebsiteRepository.saveAll(items);
-    }
+       stackOverflowWebsiteRepository.saveAll(items);
+    }*/
 }
